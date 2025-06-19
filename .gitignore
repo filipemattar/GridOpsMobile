@@ -9,6 +9,14 @@ dist/
 web-build/
 expo-env.d.ts
 
+# 👉 iOS
+ios/build/
+ios/Pods/                 
+ios/*.xcworkspace     
+ios/*.xcuserstate
+*.xcodeproj/project.xcworkspace
+*.xcodeproj/xcuserdata/
+
 # Native
 .kotlin/
 *.orig.*
