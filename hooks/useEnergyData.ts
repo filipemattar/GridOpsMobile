@@ -3,71 +3,77 @@ import { Platform } from "react-native";
 
 const BASE_URL =
   Platform.OS === "ios"
-    ? "http://localhost:3000/energy"
-    : "http://10.0.2.2:3000/energy";
+    ? "http://localhost:3000/energy/sin"
+    : "http://localhost:3000/energy/sin";
 
 interface EnergyPoint {
   instante: string;
   source: string;
   geracao: number;
 }
-function removeSpaces(str: string) {
-  return str.split(" ").join("");
+interface EnergyData {
+  hidraulica: EnergyPoint[];
+  nuclear: EnergyPoint[];
+  solar: EnergyPoint[];
+  termica: EnergyPoint[];
+  eolica: EnergyPoint[];
 }
 
-export function useEnergyData(region = "sin") {
-  const [energyData, setEnergyData] = useState<{
-    hydro: EnergyPoint[];
-    nuclear: EnergyPoint[];
-    solar: EnergyPoint[];
-    thermal: EnergyPoint[];
-    wind: EnergyPoint[];
-  }>({
-    hydro: [],
+export function useEnergyData() {
+  const [energyData, setEnergyData] = useState<EnergyData>({
+    hidraulica: [],
     nuclear: [],
     solar: [],
-    thermal: [],
-    wind: [],
+    termica: [],
+    eolica: [],
   });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<any>(null);
 
-  const fetchSource = useCallback(
-    async (source: string) => {
-      try {
-        const response = await fetch(
-          `${BASE_URL}/${removeSpaces(region)}/${source}`
-        );
+  const fetchSource = useCallback(async (source: string) => {
+    try {
+      const response = await fetch(`${BASE_URL}/${source}`);
 
-        if (!response.ok) {
-          console.warn(`Response error on ${source}: ${response.status}`);
-          return [];
-        }
-
-        const data = await response.json();
-        return data;
-      } catch (error) {
-        console.error(`Error fetching data from ${source}:`, error);
+      if (!response.ok) {
+        console.warn(`Response error on ${source}: ${response.status}`);
         return [];
       }
-    },
-    [region]
-  );
 
-  const fetchAll = useCallback(async () => {
-    const [hydro, nuclear, solar, thermal, wind] = await Promise.all([
-      fetchSource("hidraulica"),
-      fetchSource("nuclear"),
-      fetchSource("solar"),
-      fetchSource("termica"),
-      fetchSource("eolica"),
-    ]);
-    setEnergyData({ hydro, nuclear, solar, thermal, wind });
-  }, [fetchSource]);
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error(`Error fetching data from ${source}:`, error);
+      return [];
+    }
+  }, []);
 
   useEffect(() => {
-    fetchAll();
-    const interval = setInterval(fetchAll, 3000000);
-    return () => clearInterval(interval);
-  }, [fetchAll]);
+    const fetchDataAndSetInterval = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const [hidraulica, nuclear, solar, termica, eolica] = await Promise.all(
+          [
+            fetchSource("hidraulica"),
+            fetchSource("nuclear"),
+            fetchSource("solar"),
+            fetchSource("termica"),
+            fetchSource("eolica"),
+          ]
+        );
+        setEnergyData({ hidraulica, nuclear, solar, termica, eolica });
+      } catch (err) {
+        setError(err);
+        console.error("Failed to fetch all energy data:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  return energyData;
+    fetchDataAndSetInterval();
+    const interval = setInterval(fetchDataAndSetInterval, 3000000);
+    return () => clearInterval(interval);
+  }, [fetchSource]);
+
+  return { energyData, isLoading, error };
 }
