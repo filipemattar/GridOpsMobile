@@ -3,8 +3,8 @@ import { Platform } from "react-native";
 
 const BASE_URL =
   Platform.OS === "ios"
-    ? "http://localhost:3000/energy/sin"
-    : "http://localhost:3000/energy/sin";
+    ? "http://localhost:3000/energy"
+    : "http://localhost:3000/energy";
 
 interface EnergyPoint {
   instante: string;
@@ -19,7 +19,7 @@ interface EnergyData {
   eolica: EnergyPoint[];
 }
 
-export function useEnergyData() {
+export function useEnergyData(region = "sin") {
   const [energyData, setEnergyData] = useState<EnergyData>({
     hidraulica: [],
     nuclear: [],
@@ -30,22 +30,25 @@ export function useEnergyData() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<any>(null);
 
-  const fetchSource = useCallback(async (source: string) => {
-    try {
-      const response = await fetch(`${BASE_URL}/${source}`);
+  const fetchSource = useCallback(
+    async (source: string) => {
+      try {
+        const response = await fetch(`${BASE_URL}/${region}/${source}`);
 
-      if (!response.ok) {
-        console.warn(`Response error on ${source}: ${response.status}`);
+        if (!response.ok) {
+          console.warn(`Response error on ${source}: ${response.status}`);
+          return [];
+        }
+
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error(`Error fetching data from ${source}:`, error);
         return [];
       }
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error(`Error fetching data from ${source}:`, error);
-      return [];
-    }
-  }, []);
+    },
+    [region]
+  );
 
   useEffect(() => {
     const fetchDataAndSetInterval = async () => {

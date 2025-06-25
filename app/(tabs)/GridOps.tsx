@@ -1,16 +1,18 @@
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import "react-native-reanimated";
+import Carousel from "react-native-reanimated-carousel";
+import Card from "../../components/ui/Card";
 import { useEnergyData } from "../../hooks/useEnergyData";
-import Card from "./components/ui/Card";
-import StackedEnergyChart from "./components/ui/Chart";
-
-interface EnergyPoint {
-  instante: string;
-  source: string;
-  geracao: number;
-}
 
 export default function HomeScreen() {
+  const { width: screenWidth } = useWindowDimensions();
+  const { height: screenHeight } = useWindowDimensions();
   const { energyData, isLoading, error } = useEnergyData();
 
   const { hidraulica, nuclear, solar, termica, eolica } = energyData;
@@ -18,21 +20,20 @@ export default function HomeScreen() {
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#0000ff" />
-        <Text>Carregando dados de energia...</Text>
+        <ActivityIndicator size="large" color="#a6a09b" />
+        <Text>Loading Energy Data...</Text>
       </View>
     );
   }
 
   if (error) {
-    // Você pode usar um Alert ou exibir uma mensagem de erro na tela
     return (
       <View style={styles.centered}>
         <Text style={styles.errorText}>Erro ao carregar dados:</Text>
         <Text style={styles.errorText}>
-          {error.message || "Erro desconhecido"}
+          {error.message || "Unknowen Error"}
         </Text>
-        <Text>Por favor, tente novamente mais tarde.</Text>
+        <Text>Please, try again later.</Text>
       </View>
     );
   }
@@ -45,9 +46,19 @@ export default function HomeScreen() {
     windNow: eolica[0]?.geracao || 0,
   };
 
-  const lastUpdate = new Date(hidraulica[0]?.instante).toLocaleString("pt-BR", {
+  const date = new Date(hidraulica[0]?.instante);
+  const day = date.toLocaleDateString("pt-BR", {
     timeZone: "America/Sao_Paulo",
+    day: "2-digit",
+    month: "2-digit",
   });
+  const time = date.toLocaleTimeString("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  const lastUpdate = `${day} at ${time}`;
 
   const totalEnergy = hydroNow + nuclearNow + solarNow + thermalNow + windNow;
 
@@ -67,111 +78,173 @@ export default function HomeScreen() {
     wind: require("../../assets/energy-icons/wind-turbine.png"),
   };
 
-  const sources = { hidraulica, nuclear, solar, termica, eolica };
-
-  const allPoints = Object.values(sources).flat();
-
-  function transformToChartData(rawData: EnergyPoint[]) {
-    const grouped: { [timestamp: string]: any } = {};
-
-    rawData.forEach(({ instante, source, geracao }) => {
-      const timestamp = new Date(instante).getTime();
-      if (!grouped[timestamp]) {
-        grouped[timestamp] = { instante: timestamp };
-      }
-      grouped[timestamp][source] = geracao;
-    });
-
-    const sourceKeys = Object.keys(sources);
-    const completed = Object.values(grouped).map((entry) => {
-      sourceKeys.forEach((key) => {
-        if (entry[key] === undefined) {
-          entry[key] = 0;
-        }
-      });
-      return entry;
-    });
-
-    return completed.sort((a, b) => a.instante - b.instante);
-  }
-
-  const chartData = transformToChartData(allPoints);
-  chartData.pop();
+  const carouselData = [
+    { type: "total", total: totalEnergy, lastUpdate },
+    {
+      type: "sources",
+      data: {
+        hydroNow,
+        nuclearNow,
+        solarNow,
+        thermalNow,
+        windNow,
+        totalEnergy,
+      },
+    },
+  ];
 
   return (
-    <>
-      <Text style={styles.date}>Last Update: {lastUpdate}</Text>
-      <View style={styles.gridContainer}>
-        <Card
-          source="Total Energy"
-          data={totalEnergy}
-          backgroundColor={"white"}
-        />
-        <Card
-          source="Hydropower"
-          data={hydroNow}
-          percentage={(hydroNow / totalEnergy) * 100}
-          backgroundColor={sourceColors["hydro"]}
-          icon={sourceIcon["hydro"]}
-        />
-        <Card
-          source="Nuclear Power"
-          data={nuclearNow}
-          percentage={(nuclearNow / totalEnergy) * 100}
-          backgroundColor={sourceColors["nuclear"]}
-          icon={sourceIcon["nuclear"]}
-        />
-        <Card
-          source="Solar Power"
-          data={solarNow}
-          percentage={(solarNow / totalEnergy) * 100}
-          backgroundColor={sourceColors["solar"]}
-          icon={sourceIcon["solar"]}
-        />
-        <Card
-          source="Thermal Power"
-          data={thermalNow}
-          percentage={(thermalNow / totalEnergy) * 100}
-          backgroundColor={sourceColors["thermal"]}
-          icon={sourceIcon["thermal"]}
-        />
-        <Card
-          source="Wind Power"
-          data={windNow}
-          percentage={(windNow / totalEnergy) * 100}
-          backgroundColor={sourceColors["wind"]}
-          icon={sourceIcon["wind"]}
-        />
-      </View>
-      <View style={styles.chartContainer}>
-        <StackedEnergyChart data={chartData} colors={sourceColors} />
-      </View>
-    </>
+    <Carousel
+      width={screenWidth}
+      data={carouselData}
+      renderItem={({ item }) => {
+        if (item.type === "total") {
+          return (
+            <View style={styles.totalCardContainer}>
+              <Card
+                source="Total Energy"
+                data={item.total || 0}
+                date={item.lastUpdate}
+                backgroundColor="#a6a09b"
+              />
+            </View>
+          );
+        }
+
+        if (item.type === "sources") {
+          return (
+            <View style={styles.sourcesPage}>
+              <View style={styles.cardWrapper}>
+                <Card
+                  source="Hydropower"
+                  data={item.data?.hydroNow || 0}
+                  percentage={
+                    item.data?.hydroNow !== undefined && item.data?.totalEnergy
+                      ? (item.data.hydroNow / item.data.totalEnergy) * 100
+                      : 0
+                  }
+                  backgroundColor={sourceColors["hydro"]}
+                  icon={sourceIcon["hydro"]}
+                />
+              </View>
+              <View style={styles.cardWrapper}>
+                <Card
+                  source="Solar Power"
+                  data={item.data?.solarNow || 0}
+                  percentage={
+                    item.data?.solarNow !== undefined && item.data?.totalEnergy
+                      ? (item.data.solarNow / item.data.totalEnergy) * 100
+                      : 0
+                  }
+                  backgroundColor={sourceColors["solar"]}
+                  icon={sourceIcon["solar"]}
+                />
+              </View>
+              <View style={styles.cardWrapper}>
+                <Card
+                  source="Wind Power"
+                  data={item.data?.windNow || 0}
+                  percentage={
+                    item.data?.windNow !== undefined && item.data?.totalEnergy
+                      ? (item.data.windNow / item.data.totalEnergy) * 100
+                      : 0
+                  }
+                  backgroundColor={sourceColors["wind"]}
+                  icon={sourceIcon["wind"]}
+                />
+              </View>
+              <View style={styles.cardWrapper}>
+                <Card
+                  source="Thermal Power"
+                  data={item.data?.thermalNow || 0}
+                  percentage={
+                    item.data?.thermalNow !== undefined &&
+                    item.data?.totalEnergy
+                      ? (item.data.thermalNow / item.data.totalEnergy) * 100
+                      : 0
+                  }
+                  backgroundColor={sourceColors["thermal"]}
+                  icon={sourceIcon["thermal"]}
+                />
+              </View>
+              <View style={styles.cardWrapper}>
+                <Card
+                  source="Nuclear Power"
+                  data={item.data?.nuclearNow || 0}
+                  percentage={
+                    item.data?.nuclearNow !== undefined &&
+                    item.data?.totalEnergy
+                      ? (item.data.nuclearNow / item.data.totalEnergy) * 100
+                      : 0
+                  }
+                  backgroundColor={sourceColors["nuclear"]}
+                  icon={sourceIcon["nuclear"]}
+                />
+              </View>
+            </View>
+          );
+        }
+
+        return <View />;
+      }}
+      loop={true}
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  gridContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+  sourcesPage: {
+    flex: 1,
+    paddingVertical: 5,
+    paddingHorizontal: 0,
+    backgroundColor: "white",
     justifyContent: "space-between",
-    paddingHorizontal: 8,
+    height: "100%",
   },
-  chartContainer: {
-    marginTop: 20,
-    padding: 10,
-  },
-  chartTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 8,
-  },
-
-  date: {
-    fontSize: 18,
-    fontWeight: "bold",
+  totalCardContainer: {
+    height: "100%",
+    justifyContent: "center",
     alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 32,
+    backgroundColor: "white",
+  },
+  cardWrapper: {
+    flex: 1,
+    marginBottom: 5,
+    width: "98%",
+    height: "auto",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+    alignSelf: "center",
+  },
+  container: {
+    flex: 1,
+    backgroundColor: "white",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  totalCard: {
+    flex: 1,
+    borderRadius: 20,
+    padding: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    width: "100%",
+    height: "auto",
+  },
+  sourceCard: {
+    borderRadius: 20,
+    width: "100%",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 5,
   },
   centered: {
     flex: 1,
@@ -185,3 +258,93 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
 });
+// return (
+//   <>
+// <ScrollView contentContainerStyle={styles.scrollContainer}>
+//   <View style={styles.cardWrapper}>
+//     <Card
+//       source="Total Energy"
+//       data={totalEnergy}
+//       backgroundColor={"white"}
+//       date={lastUpdate}
+//     />
+//   </View>
+//   <View style={styles.cardWrapper}>
+//     <Card
+//       source="Hydropower"
+//       data={hydroNow}
+//       percentage={(hydroNow / totalEnergy) * 100}
+//       backgroundColor={sourceColors["hydro"]}
+//       icon={sourceIcon["hydro"]}
+//     />
+//   </View>
+//   <View style={styles.cardWrapper}>
+//     <Card
+//       source="Solar Power"
+//       data={solarNow}
+//       percentage={(solarNow / totalEnergy) * 100}
+//       backgroundColor={sourceColors["solar"]}
+//       icon={sourceIcon["solar"]}
+//     />
+//   </View>
+//   <View style={styles.cardWrapper}>
+//     <Card
+//       source="Wind Power"
+//       data={windNow}
+//       percentage={(windNow / totalEnergy) * 100}
+//       backgroundColor={sourceColors["wind"]}
+//       icon={sourceIcon["wind"]}
+//     />
+//   </View>
+//   <View style={styles.cardWrapper}>
+//     <Card
+//       source="Thermal Power"
+//       data={thermalNow}
+//       percentage={(thermalNow / totalEnergy) * 100}
+//       backgroundColor={sourceColors["thermal"]}
+//       icon={sourceIcon["thermal"]}
+//     />
+//   </View>
+//   <View style={styles.cardWrapper}>
+//     <Card
+//       source="Nuclear Power"
+//       data={nuclearNow}
+//       percentage={(nuclearNow / totalEnergy) * 100}
+//       backgroundColor={sourceColors["nuclear"]}
+//       icon={sourceIcon["nuclear"]}
+//     />
+//   </View>
+// </ScrollView>
+//   </>
+// );
+
+// const styles = StyleSheet.create({
+// scrollContainer: {
+//   paddingVertical: 5,
+//   paddingHorizontal: 0,
+//   backgroundColor: "white",
+// },
+
+// cardWrapper: {
+//   marginBottom: 5,
+//   width: "98%",
+//   shadowColor: "#000",
+//   shadowOffset: { width: 0, height: 2 },
+//   shadowOpacity: 0.1,
+//   shadowRadius: 3,
+//   elevation: 2,
+//   alignSelf: "center",
+// },
+
+// centered: {
+//   flex: 1,
+//   justifyContent: "center",
+//   alignItems: "center",
+// },
+// errorText: {
+//   color: "red",
+//   fontSize: 16,
+//   textAlign: "center",
+//   marginBottom: 10,
+// },
+// });
