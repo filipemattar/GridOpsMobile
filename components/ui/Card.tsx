@@ -18,7 +18,7 @@ export default function Card({
   icon,
   date,
 }: CardProps) {
-  const isTotal = source === "Total Energy";
+  const isTotal = source === "Total ";
 
   return (
     <View
@@ -33,7 +33,7 @@ export default function Card({
           {icon ? (
             <Image source={icon} style={styles.icon} />
           ) : (
-            <PlugZap size={45} color={"#085C44"} />
+            <PlugZap size={60} color={"#085C44"} />
           )}
         </View>
         <View>
@@ -46,14 +46,20 @@ export default function Card({
           )}
         </View>
       </View>
+
       <View style={styles.footer}>
         <View>
-          <Text style={[styles.title, isTotal && { color: "#085C44" }]}>
-            {source}
+          <Text
+            style={[
+              styles.title,
+              isTotal && { color: "#085C44", fontSize: 20 },
+            ]}
+          >
+            {isTotal ? "" : source}
           </Text>
         </View>
         <Text
-          style={[styles.value, isTotal && { color: "#085C44", fontSize: 40 }]}
+          style={[styles.value, isTotal && { color: "#085C44", fontSize: 65 }]}
         >
           {(data / 1000)?.toFixed(2)} GW
         </Text>

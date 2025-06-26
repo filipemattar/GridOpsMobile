@@ -102,10 +102,11 @@ export default function HomeScreen() {
           return (
             <View style={styles.totalCardContainer}>
               <Card
-                source="Total Energy"
+                source="Total "
                 data={item.total || 0}
                 date={item.lastUpdate}
-                backgroundColor="#23D366"
+                backgroundColor="#F5F5F5"
+                // "#23D366" verde wpp
                 // "#D4FCA1"
               />
             </View>
