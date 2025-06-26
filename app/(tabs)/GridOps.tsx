@@ -12,7 +12,7 @@ import { useEnergyData } from "../../hooks/useEnergyData";
 
 export default function HomeScreen() {
   const { width: screenWidth } = useWindowDimensions();
-  const { height: screenHeight } = useWindowDimensions();
+
   const { energyData, isLoading, error } = useEnergyData();
 
   const { hidraulica, nuclear, solar, termica, eolica } = energyData;
@@ -105,7 +105,8 @@ export default function HomeScreen() {
                 source="Total Energy"
                 data={item.total || 0}
                 date={item.lastUpdate}
-                backgroundColor="#a6a09b"
+                backgroundColor="#23D366"
+                // "#D4FCA1"
               />
             </View>
           );
@@ -235,6 +236,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: "100%",
     height: "auto",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 5,
   },
   sourceCard: {
     borderRadius: 20,
