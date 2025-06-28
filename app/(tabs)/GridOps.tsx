@@ -101,14 +101,14 @@ export default function HomeScreen() {
         if (item.type === "total") {
           return (
             <View style={styles.totalCardContainer}>
-              <Card
-                source="Total "
-                data={item.total || 0}
-                date={item.lastUpdate}
-                backgroundColor="#F5F5F5"
-                // "#23D366" verde wpp
-                // "#D4FCA1"
-              />
+              <View style={styles.totalCard}>
+                <Card
+                  source="Total "
+                  data={item.total || 0}
+                  date={item.lastUpdate}
+                  backgroundColor="#f5f5f4"
+                />
+              </View>
             </View>
           );
         }
@@ -201,20 +201,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0,
     backgroundColor: "white",
     justifyContent: "space-between",
-    height: "100%",
   },
   totalCardContainer: {
     height: "100%",
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 16,
-    paddingVertical: 32,
+    paddingVertical: 16,
     backgroundColor: "white",
   },
   cardWrapper: {
     flex: 1,
     marginBottom: 5,
-    width: "98%",
+    width: "100%",
     height: "auto",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -222,6 +221,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 2,
     alignSelf: "center",
+    padding: 5,
   },
   container: {
     flex: 1,
@@ -231,12 +231,11 @@ const styles = StyleSheet.create({
   },
   totalCard: {
     flex: 1,
-    borderRadius: 20,
-    padding: 20,
+    padding: 5,
     justifyContent: "center",
     alignItems: "center",
     width: "100%",
-    height: "auto",
+    height: 250,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,
@@ -265,93 +264,3 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
 });
-// return (
-//   <>
-// <ScrollView contentContainerStyle={styles.scrollContainer}>
-//   <View style={styles.cardWrapper}>
-//     <Card
-//       source="Total Energy"
-//       data={totalEnergy}
-//       backgroundColor={"white"}
-//       date={lastUpdate}
-//     />
-//   </View>
-//   <View style={styles.cardWrapper}>
-//     <Card
-//       source="Hydropower"
-//       data={hydroNow}
-//       percentage={(hydroNow / totalEnergy) * 100}
-//       backgroundColor={sourceColors["hydro"]}
-//       icon={sourceIcon["hydro"]}
-//     />
-//   </View>
-//   <View style={styles.cardWrapper}>
-//     <Card
-//       source="Solar Power"
-//       data={solarNow}
-//       percentage={(solarNow / totalEnergy) * 100}
-//       backgroundColor={sourceColors["solar"]}
-//       icon={sourceIcon["solar"]}
-//     />
-//   </View>
-//   <View style={styles.cardWrapper}>
-//     <Card
-//       source="Wind Power"
-//       data={windNow}
-//       percentage={(windNow / totalEnergy) * 100}
-//       backgroundColor={sourceColors["wind"]}
-//       icon={sourceIcon["wind"]}
-//     />
-//   </View>
-//   <View style={styles.cardWrapper}>
-//     <Card
-//       source="Thermal Power"
-//       data={thermalNow}
-//       percentage={(thermalNow / totalEnergy) * 100}
-//       backgroundColor={sourceColors["thermal"]}
-//       icon={sourceIcon["thermal"]}
-//     />
-//   </View>
-//   <View style={styles.cardWrapper}>
-//     <Card
-//       source="Nuclear Power"
-//       data={nuclearNow}
-//       percentage={(nuclearNow / totalEnergy) * 100}
-//       backgroundColor={sourceColors["nuclear"]}
-//       icon={sourceIcon["nuclear"]}
-//     />
-//   </View>
-// </ScrollView>
-//   </>
-// );
-
-// const styles = StyleSheet.create({
-// scrollContainer: {
-//   paddingVertical: 5,
-//   paddingHorizontal: 0,
-//   backgroundColor: "white",
-// },
-
-// cardWrapper: {
-//   marginBottom: 5,
-//   width: "98%",
-//   shadowColor: "#000",
-//   shadowOffset: { width: 0, height: 2 },
-//   shadowOpacity: 0.1,
-//   shadowRadius: 3,
-//   elevation: 2,
-//   alignSelf: "center",
-// },
-
-// centered: {
-//   flex: 1,
-//   justifyContent: "center",
-//   alignItems: "center",
-// },
-// errorText: {
-//   color: "red",
-//   fontSize: 16,
-//   textAlign: "center",
-//   marginBottom: 10,
-// },
-// });

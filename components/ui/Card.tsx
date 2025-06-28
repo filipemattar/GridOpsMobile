@@ -25,7 +25,8 @@ export default function Card({
       style={[
         styles.card,
         { backgroundColor },
-        isTotal && { gap: 500, paddingTop: 30 },
+        isTotal ? styles.totalCardOverride : styles.sourceCardFlex,
+        isTotal && { gap: 180, paddingTop: 16 },
       ]}
     >
       <View style={styles.header}>
@@ -33,7 +34,7 @@ export default function Card({
           {icon ? (
             <Image source={icon} style={styles.icon} />
           ) : (
-            <PlugZap size={60} color={"#085C44"} />
+            <PlugZap size={60} color={"#79716b"} />
           )}
         </View>
         <View>
@@ -41,28 +42,34 @@ export default function Card({
             <Text style={styles.percentage}>{percentage?.toFixed(2)} %</Text>
           ) : (
             <>
-              <Text style={styles.date}>Last Update: {date}</Text>
+              <Text style={styles.logo}>GridOps</Text>
             </>
           )}
         </View>
       </View>
 
       <View style={styles.footer}>
-        <View>
+        {!isTotal && (
+          <View>
+            <Text style={styles.title}>{source}</Text>
+          </View>
+        )}
+
+        <View style={{ alignItems: isTotal ? "flex-start" : "flex-end" }}>
           <Text
             style={[
-              styles.title,
-              isTotal && { color: "#085C44", fontSize: 20 },
+              styles.value,
+              isTotal && { color: "#79716b", fontSize: 65 },
             ]}
           >
-            {isTotal ? "" : source}
+            {(data / 1000)?.toFixed(2)} GW
           </Text>
+          {isTotal && date && (
+            <Text style={[styles.date, { marginTop: 8 }]}>
+              Last Update at: {date}
+            </Text>
+          )}
         </View>
-        <Text
-          style={[styles.value, isTotal && { color: "#085C44", fontSize: 65 }]}
-        >
-          {(data / 1000)?.toFixed(2)} GW
-        </Text>
       </View>
     </View>
   );
@@ -70,11 +77,18 @@ export default function Card({
 
 const styles = StyleSheet.create({
   card: {
-    flex: 1,
     width: "100%",
     borderRadius: 30,
     padding: 16,
     gap: 5,
+  },
+  // New style to allow the total card to respect its parent's height
+  totalCardOverride: {
+    // No flex: 1 here, height will be controlled by parent (HomeScreen's totalCard style)
+  },
+  // Style for other source cards to maintain their flex behavior
+  sourceCardFlex: {
+    flex: 1, // Keep flex: 1 for source cards to distribute space
   },
   header: {
     flexDirection: "row",
@@ -110,6 +124,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "bold",
     alignItems: "center",
-    color: "#085C44",
+    color: "#79716b",
+  },
+  logo: {
+    fontSize: 45,
+    fontWeight: "bold",
+    alignItems: "center",
+    color: "#79716b",
   },
 });
